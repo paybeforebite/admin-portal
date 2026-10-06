@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="PayBeforeBite subscription management">
+  <title>PayBeforeBite | Subscriptions</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside id="appSidebar" class="app-sidebar" aria-label="Platform navigation">
+      <div class="sidebar-brand">
+        <button class="sidebar-logo" type="button" aria-expanded="true" aria-label="Collapse navigation" title="Collapse navigation">🍽️</button>
+        <div class="sidebar-brand-text"><strong>PayBeforeBite</strong><span>Platform Admin</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link" href="platform-dashboard.html"><span class="sidebar-icon">⌂</span><span>Dashboard</span></a>
+        <a class="sidebar-link" href="customers.html"><span class="sidebar-icon">◉</span><span>Customers</span></a>
+        <a class="sidebar-link active" href="subscriptions.html"><span class="sidebar-icon">▤</span><span>Subscriptions</span></a>
+        <a class="sidebar-link" href="analytics.html"><span class="sidebar-icon">▥</span><span>Analytics</span></a>
+        <a class="sidebar-link" href="settings.html"><span class="sidebar-icon">⚙</span><span>Settings</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="sidebar-footer-dot"></span>
+        <span class="sidebar-user"><strong>Platform Admin</strong><small data-user-email>Signed in</small></span>
+        <button class="sidebar-logout" type="button" data-logout title="Logout" aria-label="Logout"><span class="sidebar-logout-icon">↪</span><span class="sidebar-logout-text">Logout</span></button>
+      </div>
+    </aside>
+    <header class="topbar">
+      <div><p class="eyebrow">SUBSCRIPTION MANAGEMENT</p><h1>Plans & Subscriptions</h1></div>
+      <button id="refreshSubscriptionsBtn" class="secondary-btn" type="button">Refresh</button>
+    </header>
+    <main class="platform-page subscription-page">
+      <section class="platform-hero">
+        <p class="eyebrow">PAYBEFOREBITE PRICING</p>
+        <h2>Plan catalog</h2>
+        <p>Configure the package customers receive. Pricing and limits are stored in the database so the platform can evolve without changing POS code.</p>
+      </section>
+      <section id="planCards" class="subscription-plan-grid" aria-label="PayBeforeBite plans"></section>
+      <section class="management-panel subscription-panel">
+        <div class="management-header">
+          <div><p class="eyebrow">CUSTOMER BILLING</p><h2>Restaurant subscriptions</h2><p>Assign or change a restaurant's plan. Payment-gateway automation can be connected later.</p></div>
+        </div>
+        <div id="subscriptionMessage" class="login-message"></div>
+        <div class="menu-table-wrap">
+          <table>
+            <thead><tr><th>Restaurant</th><th>Plan</th><th>Billing</th><th>Status</th><th>Started</th><th>Change Plan</th></tr></thead>
+            <tbody id="subscriptionTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="subscriptionModal" class="modal hidden">
+    <form id="subscriptionForm" class="form-card">
+      <div class="modal-form-header"><div><p class="eyebrow">PLAN CHANGE</p><h2 id="subscriptionModalTitle">Change subscription</h2></div><button id="closeSubscriptionModal" class="icon-btn" type="button" aria-label="Close">×</button></div>
+      <div class="onboarding-note">This changes the restaurant's active entitlement immediately. Payment collection is intentionally separate and can be connected to Razorpay or another gateway later.</div>
+      <input id="subscriptionRestaurantId" type="hidden">
+      <label>Plan<select id="subscriptionPlan" class="text-input"><option value="starter">Starter — ₹299/month</option><option value="basic">Basic — ₹599/month</option><option value="pro">Pro — ₹999/month</option><option value="business">Business — ₹1,999/month</option><option value="enterprise">Enterprise — Custom</option></select></label>
+      <label>Billing cycle<select id="subscriptionBillingCycle" class="text-input"><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label>
+      <div class="form-actions"><button id="cancelSubscriptionBtn" class="secondary-btn" type="button">Cancel</button><button id="saveSubscriptionBtn" class="primary-btn" type="submit">Save Plan</button></div>
+      <p id="subscriptionFormMessage" class="login-message"></p>
+    </form>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="sidebar.js"></script>
+  <script src="subscriptions.js"></script>
+</body>
+</html>
