@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="PayBeforeBite customer and restaurant onboarding">
+  <title>PayBeforeBite | Customers</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside id="appSidebar" class="app-sidebar" aria-label="Main navigation">
+      <div class="sidebar-brand">
+        <button class="sidebar-logo" type="button" aria-expanded="true" aria-label="Collapse navigation" title="Collapse navigation">🍽️</button>
+        <div class="sidebar-brand-text">
+          <strong>PayBeforeBite</strong>
+          <span>Platform Admin</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link" href="platform-dashboard.html"><span class="sidebar-icon">⌂</span><span>Dashboard</span></a>
+        <a class="sidebar-link active" href="customers.html"><span class="sidebar-icon">◉</span><span>Customers</span></a>
+        <a class="sidebar-link" href="subscriptions.html"><span class="sidebar-icon">▤</span><span>Subscriptions</span></a>
+        <a class="sidebar-link" href="analytics.html"><span class="sidebar-icon">▥</span><span>Analytics</span></a>
+        <a class="sidebar-link" href="settings.html"><span class="sidebar-icon">⚙</span><span>Settings</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="sidebar-footer-dot"></span>
+        <span class="sidebar-user">
+          <strong>Platform Admin</strong>
+          <small data-user-email>Signed in</small>
+        </span>
+        <button class="sidebar-logout" type="button" data-logout title="Logout" aria-label="Logout"><span class="sidebar-logout-icon">↪</span><span class="sidebar-logout-text">Logout</span></button>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">PAYBEFOREBITE ADMIN</p>
+        <h1>Customers</h1>
+      </div>
+      <button id="newCustomerBtn" class="primary-btn" type="button">+ Create Restaurant</button>
+    </header>
+
+    <main class="customer-admin-page">
+      <section class="customer-stats">
+        <article class="customer-stat"><span>Total Restaurants</span><strong id="totalCustomers">0</strong></article>
+        <article class="customer-stat"><span>Pending Activation</span><strong id="pendingCustomers">0</strong></article>
+        <article class="customer-stat"><span>Active</span><strong id="activeCustomers">0</strong></article>
+        <article class="customer-stat"><span>Suspended</span><strong id="suspendedCustomers">0</strong></article>
+      </section>
+
+      <section class="management-panel">
+        <div class="management-header">
+          <div>
+            <p class="eyebrow">CUSTOMER ONBOARDING</p>
+            <h2>Restaurants</h2>
+            <p>Create a restaurant account and send its owner a secure activation email.</p>
+          </div>
+          <button id="refreshCustomersBtn" class="secondary-btn" type="button">Refresh</button>
+        </div>
+
+        <div class="management-toolbar">
+          <input id="customerSearch" class="search-input" type="search" placeholder="Search restaurant or owner...">
+          <select id="customerStatusFilter" class="text-input category-filter">
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div id="customerMessage" class="login-message"></div>
+        <div class="menu-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Restaurant</th>
+                <th>Owner</th>
+                <th>Plan</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Activated</th>
+              </tr>
+            </thead>
+            <tbody id="customerTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="customerModal" class="modal hidden">
+    <form id="customerForm" class="form-card">
+      <div class="modal-form-header">
+        <div>
+          <p class="eyebrow">NEW CUSTOMER</p>
+          <h2>Create restaurant account</h2>
+        </div>
+        <button id="closeCustomerModal" class="icon-btn" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="onboarding-note">
+        The owner will receive an activation email and create their own password. No password is stored or shared by PayBeforeBite.
+      </div>
+      <div class="form-grid">
+        <label>Restaurant name<input id="customerRestaurantName" class="text-input" required></label>
+        <label>Owner name<input id="customerOwnerName" class="text-input" required></label>
+        <label>Owner email<input id="customerOwnerEmail" class="text-input" type="email" autocomplete="email" required></label>
+        <label>Phone<input id="customerPhone" class="text-input" type="tel"></label>
+        <label>Plan<select id="customerPlan" class="text-input">
+          <option value="starter">Starter — ₹299/month</option>
+          <option value="basic">Basic — ₹599/month</option>
+          <option value="pro" selected>Pro — ₹999/month</option>
+          <option value="business">Business — ₹1,999/month</option>
+          <option value="enterprise">Enterprise — Custom</option>
+        </select></label>
+      </div>
+      <div class="form-actions">
+        <button id="cancelCustomerBtn" class="secondary-btn" type="button">Cancel</button>
+        <button id="createCustomerBtn" class="primary-btn" type="submit">Create & Send Activation</button>
+      </div>
+      <p id="customerFormMessage" class="login-message"></p>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="sidebar.js"></script>
+  <script src="customers.js"></script>
+</body>
+</html>
