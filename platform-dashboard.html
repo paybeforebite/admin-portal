@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="PayBeforeBite platform administration">
+  <title>PayBeforeBite | Platform Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside id="appSidebar" class="app-sidebar" aria-label="Platform navigation">
+      <div class="sidebar-brand">
+        <button class="sidebar-logo" type="button" aria-expanded="true" aria-label="Collapse navigation" title="Collapse navigation">🍽️</button>
+        <div class="sidebar-brand-text"><strong>PayBeforeBite</strong><span>Platform Admin</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link active" href="platform-dashboard.html"><span class="sidebar-icon">⌂</span><span>Dashboard</span></a>
+        <a class="sidebar-link " href="customers.html"><span class="sidebar-icon">◉</span><span>Customers</span></a>
+        <a class="sidebar-link " href="subscriptions.html"><span class="sidebar-icon">▤</span><span>Subscriptions</span></a>
+        <a class="sidebar-link " href="analytics.html"><span class="sidebar-icon">▥</span><span>Analytics</span></a>
+        <a class="sidebar-link " href="settings.html"><span class="sidebar-icon">⚙</span><span>Settings</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="sidebar-footer-dot"></span>
+        <span class="sidebar-user"><strong>Platform Admin</strong><small data-user-email>Signed in</small></span>
+        <button class="sidebar-logout" type="button" data-logout title="Logout" aria-label="Logout"><span class="sidebar-logout-icon">↪</span><span class="sidebar-logout-text">Logout</span></button>
+      </div>
+    </aside>
+    <header class="topbar">
+      <div><p class="eyebrow">ADMIN OVERVIEW</p><h1>Platform Dashboard</h1></div>
+    </header>
+    <main class="platform-page">
+      <section class="platform-hero">
+        <p class="eyebrow">PAYBEFOREBITE PLATFORM</p>
+        <h2>Platform Dashboard</h2>
+        <p>Monitor the PayBeforeBite platform from one place. Customer onboarding is available now; additional platform operations can be added here as the SaaS grows.</p>
+      </section>
+      <section class="platform-card-grid">
+        <article class="platform-card"><h3>Customers</h3><p>Create restaurants, onboard owners, and monitor account activation.</p><span class="platform-coming-soon">Coming soon</span></article><article class="platform-card"><h3>Subscriptions</h3><p>Manage plans, billing status, renewals, and subscription lifecycle.</p><span class="platform-coming-soon">Coming soon</span></article><article class="platform-card"><h3>Platform Analytics</h3><p>Track restaurant growth, usage, revenue, and operational KPIs.</p><span class="platform-coming-soon">Coming soon</span></article>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="sidebar.js"></script>
+</body>
+</html>
