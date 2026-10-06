@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="PayBeforeBite platform administration">
+  <title>PayBeforeBite | Analytics</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside id="appSidebar" class="app-sidebar" aria-label="Platform navigation">
+      <div class="sidebar-brand">
+        <button class="sidebar-logo" type="button" aria-expanded="true" aria-label="Collapse navigation" title="Collapse navigation">🍽️</button>
+        <div class="sidebar-brand-text"><strong>PayBeforeBite</strong><span>Platform Admin</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link " href="platform-dashboard.html"><span class="sidebar-icon">⌂</span><span>Dashboard</span></a>
+        <a class="sidebar-link " href="customers.html"><span class="sidebar-icon">◉</span><span>Customers</span></a>
+        <a class="sidebar-link " href="subscriptions.html"><span class="sidebar-icon">▤</span><span>Subscriptions</span></a>
+        <a class="sidebar-link active" href="analytics.html"><span class="sidebar-icon">▥</span><span>Analytics</span></a>
+        <a class="sidebar-link " href="settings.html"><span class="sidebar-icon">⚙</span><span>Settings</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="sidebar-footer-dot"></span>
+        <span class="sidebar-user"><strong>Platform Admin</strong><small data-user-email>Signed in</small></span>
+        <button class="sidebar-logout" type="button" data-logout title="Logout" aria-label="Logout"><span class="sidebar-logout-icon">↪</span><span class="sidebar-logout-text">Logout</span></button>
+      </div>
+    </aside>
+    <header class="topbar">
+      <div><p class="eyebrow">PLATFORM ANALYTICS</p><h1>Analytics</h1></div>
+    </header>
+    <main class="platform-page">
+      <section class="platform-hero">
+        <p class="eyebrow">PAYBEFOREBITE PLATFORM</p>
+        <h2>Analytics</h2>
+        <p>Get a platform-level view of restaurant growth, usage, billing, and operational performance.</p>
+      </section>
+      <section class="platform-card-grid">
+        <article class="platform-card"><h3>Restaurant Growth</h3><p>Track new restaurants, activations, and churn.</p><span class="platform-coming-soon">Coming soon</span></article><article class="platform-card"><h3>Usage</h3><p>Measure invoices, menu activity, and platform adoption.</p><span class="platform-coming-soon">Coming soon</span></article><article class="platform-card"><h3>Revenue</h3><p>Prepare platform revenue and plan-level reporting.</p><span class="platform-coming-soon">Coming soon</span></article>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="sidebar.js"></script>
+</body>
+</html>
