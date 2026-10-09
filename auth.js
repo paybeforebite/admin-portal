@@ -1,139 +1,96 @@
-const config=window.SUPABASE_CONFIG||{};
-const client=window.supabase&&config.url&&config.publishableKey?window.supabase.createClient(config.url,config.publishableKey):null;
-window.SUPABASE_CLIENT=client;
+// Platform-admin-only session guard for the standalone admin portal.
+const config = window.SUPABASE_CONFIG || {};
+const client = window.supabase && config.url && config.publishableKey
+  ? window.supabase.createClient(config.url, config.publishableKey)
+  : null;
 
-const PLATFORM_PAGES=[
+window.SUPABASE_CLIENT = client;
+window.IS_PLATFORM_ADMIN = false;
+
+const PLATFORM_PAGES = new Set([
   "platform-dashboard.html",
   "customers.html",
   "subscriptions.html",
   "analytics.html",
-  "settings.html"
-];
+  "settings.html",
+]);
 
-const RESTAURANT_PAGES=[
-  "dashboard.html",
-  "billing.html",
-  "menu.html",
-  "restaurant-customers.html",
-  "staff.html",
-  "reports.html",
-  "profile.html",
-  "subscription.html"
-];
-
-const OWNER_ADMIN_PAGES=[
-  "menu.html",
-  "restaurant-customers.html",
-  "staff.html",
-  "subscription.html"
-];
-
-function currentPage(){
-  return window.location.pathname.split("/").pop()||"index.html";
+function currentPage() {
+  return window.location.pathname.split("/").pop() || "index.html";
 }
 
-function redirectToLogin(){
-  const page=currentPage();
-  if(page==="index.html") return;
-  const allowedNext=[...PLATFORM_PAGES,...RESTAURANT_PAGES];
-  const next=allowedNext.includes(page)?page:"dashboard.html";
-  sessionStorage.setItem("paybeforebite_requested_page", next);
-  window.location.replace("index.html");
-}
-
-async function denyRouteAccess(){
-  // Never expose a protected page after a direct/unauthorized URL attempt.
-  // Clear the session and force the user through the login page again.
-  if(client){
-    try{ await client.auth.signOut(); }catch(_){}
+function redirectToLogin() {
+  const page = currentPage();
+  if (page !== "index.html" && PLATFORM_PAGES.has(page)) {
+    sessionStorage.setItem("paybeforebite_requested_page", page);
   }
-  sessionStorage.removeItem("paybeforebite_requested_page");
-  window.location.replace("index.html");
+  if (page !== "index.html") window.location.replace("index.html");
 }
 
-async function loadRestaurantSession(){
-  if(!client) throw new Error("Supabase is not configured.");
-
-  const {data:{session},error}=await client.auth.getSession();
-  if(error) throw error;
-  if(!session){redirectToLogin();return null;}
-
-  const {data:platformAdmin,error:platformError}=await client
+async function isActivePlatformAdmin(userId) {
+  const { data, error } = await client
     .from("platform_admins")
     .select("user_id")
-    .eq("user_id",session.user.id)
-    .eq("is_active",true)
+    .eq("user_id", userId)
+    .eq("is_active", true)
     .maybeSingle();
 
-  if(platformError) throw platformError;
-  window.IS_PLATFORM_ADMIN=Boolean(platformAdmin);
+  if (error) throw error;
+  return Boolean(data);
+}
 
-  document.querySelectorAll("[data-logout]").forEach(b=>b.addEventListener("click",async()=>{
-    b.disabled=true;
-    await client.auth.signOut();
-    location.replace("index.html");
-  }));
+async function guardPlatformPage() {
+  if (!client) {
+    if (currentPage() !== "index.html") redirectToLogin();
+    throw new Error("Supabase is not configured.");
+  }
 
-  const page=currentPage();
+  const { data: { session }, error } = await client.auth.getSession();
+  if (error) throw error;
 
-  // The login page is public. Let its login controller decide where an existing
-  // session should go; do not sign out platform-only accounts here.
-  if(page==="index.html") return session;
-
-  // Platform routes are restricted to active platform administrators.
-  if(PLATFORM_PAGES.includes(page)&&!window.IS_PLATFORM_ADMIN){
-    await denyRouteAccess();
+  if (!session) {
+    redirectToLogin();
     return null;
   }
 
-  // A platform-only account should not enter restaurant routes unless it also
-  // has an active restaurant membership.
-  const {data:m,error:me}=await client
-    .from("restaurant_members")
-    .select("restaurant_id,role,restaurants(name,slug)")
-    .eq("user_id",session.user.id)
-    .eq("is_active",true)
-    .maybeSingle();
+  // The login controller handles sign-in and redirects after verifying admin status.
+  if (currentPage() === "index.html") return session;
 
-  if(me) throw me;
-
-  if(!m){
-    if(window.IS_PLATFORM_ADMIN){
-      window.RESTAURANT_ID=null;
-      window.RESTAURANT_ROLE="platform_admin";
-      window.RESTAURANT_NAME="PayBeforeBite Admin";
-      document.querySelectorAll("[data-user-email]").forEach(e=>e.textContent=session.user.email||"");
-      document.querySelectorAll("[data-restaurant-name]").forEach(e=>e.textContent="PayBeforeBite Admin");
-
-      if(!PLATFORM_PAGES.includes(page)){
-        await denyRouteAccess();
-        return null;
-      }
-      return session;
-    }
-
+  let authorized = false;
+  try {
+    authorized = await isActivePlatformAdmin(session.user.id);
+  } catch (_) {
+    // Fail closed if the admin lookup fails.
     await client.auth.signOut();
+    redirectToLogin();
+    return null;
+  }
+
+  if (!authorized) {
+    await client.auth.signOut();
+    sessionStorage.removeItem("paybeforebite_requested_page");
     window.location.replace("index.html");
     return null;
   }
 
-  window.RESTAURANT_ID=m.restaurant_id;
-  window.RESTAURANT_ROLE=String(m.role||"").trim().toLowerCase();
-  window.RESTAURANT_NAME=m.restaurants?.name||"Restaurant";
+  window.IS_PLATFORM_ADMIN = true;
+  document.querySelectorAll("[data-user-email]").forEach((element) => {
+    element.textContent = session.user.email || "";
+  });
 
-  document.querySelectorAll("[data-user-email]").forEach(e=>e.textContent=session.user.email||"");
-  document.querySelectorAll("[data-restaurant-name]").forEach(e=>e.textContent=window.RESTAURANT_NAME);
-  document.querySelectorAll("[data-platform-admin]").forEach(e=>e.style.display=window.IS_PLATFORM_ADMIN?"flex":"none");
-
-  // Restaurant routes require an active restaurant membership.
-  if(RESTAURANT_PAGES.includes(page)){
-    if(OWNER_ADMIN_PAGES.includes(page)&&!["owner","admin"].includes(window.RESTAURANT_ROLE)){
-      await denyRouteAccess();
-      return null;
-    }
-  }
+  document.querySelectorAll("[data-logout]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      try {
+        await client.auth.signOut();
+      } finally {
+        sessionStorage.removeItem("paybeforebite_requested_page");
+        window.location.replace("index.html");
+      }
+    });
+  });
 
   return session;
 }
 
-window.restaurantAuthReady=loadRestaurantSession();
+window.restaurantAuthReady = guardPlatformPage();
