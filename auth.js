@@ -76,6 +76,10 @@ async function loadRestaurantSession(){
 
   const page=currentPage();
 
+  // The login page is public. Let its login controller decide where an existing
+  // session should go; do not sign out platform-only accounts here.
+  if(page==="index.html") return session;
+
   // Platform routes are restricted to active platform administrators.
   if(PLATFORM_PAGES.includes(page)&&!window.IS_PLATFORM_ADMIN){
     await denyRouteAccess();
