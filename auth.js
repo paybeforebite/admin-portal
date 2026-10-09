@@ -93,4 +93,4 @@ async function guardPlatformPage() {
   return session;
 }
 
-window.restaurantAuthReady = guardPlatformPage();
+window.adminAuthReady = guardPlatformPage();
