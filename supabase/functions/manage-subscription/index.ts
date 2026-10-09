@@ -95,12 +95,14 @@ Deno.serve(async (req) => {
   if (currentError) return respond({ error: currentError.message }, 400);
 
   if (current) {
-    await adminClient.from("subscriptions").update({
+    const { error: cancelError } = await adminClient.from("subscriptions").update({
       status: "cancelled",
       cancelled_at: now,
       end_date: now,
       updated_at: now,
     }).eq("id", current.id);
+
+    if (cancelError) return respond({ error: "Unable to close the existing subscription." }, 500);
   }
 
   const { data: subscription, error: subscriptionError } = await adminClient
@@ -117,7 +119,7 @@ Deno.serve(async (req) => {
 
   if (subscriptionError) return respond({ error: subscriptionError.message }, 400);
 
-  await adminClient.from("subscription_history").insert({
+  const { error: historyError } = await adminClient.from("subscription_history").insert({
     restaurant_id: restaurantId,
     subscription_id: subscription.id,
     old_plan_id: current?.plan_id || null,
@@ -127,9 +129,13 @@ Deno.serve(async (req) => {
     reason: "Platform admin plan assignment",
   });
 
-  await adminClient.from("restaurants").update({
+  if (historyError) return respond({ error: "Subscription changed, but its audit record could not be saved. Please review the subscription history." }, 500);
+
+  const { error: restaurantUpdateError } = await adminClient.from("restaurants").update({
     plan: planCode,
   }).eq("id", restaurantId);
+
+  if (restaurantUpdateError) return respond({ error: "Subscription changed, but the restaurant plan could not be synchronized. Please review the restaurant record." }, 500);
 
   return respond({ success: true, subscription });
 });
