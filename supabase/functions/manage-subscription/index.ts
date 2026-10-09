@@ -24,7 +24,8 @@ const json = (body: unknown, status = 200, headers: Record<string, string> = {})
 Deno.serve(async (req) => {
   const corsHeaders = corsHeadersFor(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+  const respond = (payload: unknown, status = 200) => json(payload, status, corsHeaders);
+  if (req.method !== "POST") return respond({ error: "Method not allowed" }, 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const publishableKeysRaw = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS");
@@ -32,17 +33,17 @@ Deno.serve(async (req) => {
   const publishableKey = publishableKeysRaw ? JSON.parse(publishableKeysRaw).default : Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
   const secretKey = secretKeysRaw ? JSON.parse(secretKeysRaw).default : Deno.env.get("SUPABASE_SECRET_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (!supabaseUrl || !publishableKey || !secretKey) return json({ error: "Supabase function secrets are not configured." }, 500);
+  if (!supabaseUrl || !publishableKey || !secretKey) return respond({ error: "Supabase function secrets are not configured." }, 500);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) return json({ error: "Authentication required." }, 401);
+  if (!authHeader?.startsWith("Bearer ")) return respond({ error: "Authentication required." }, 401);
 
   const accessToken = authHeader.replace("Bearer ", "");
   const userClient = createClient(supabaseUrl, publishableKey, { auth: { autoRefreshToken: false, persistSession: false } });
   const adminClient = createClient(supabaseUrl, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
   const { data: userData, error: userError } = await userClient.auth.getUser(accessToken);
-  if (userError || !userData.user) return json({ error: "Invalid authentication session." }, 401);
+  if (userError || !userData.user) return respond({ error: "Invalid authentication session." }, 401);
 
   const { data: platformAdmin, error: adminError } = await adminClient
     .from("platform_admins")
@@ -51,7 +52,7 @@ Deno.serve(async (req) => {
     .eq("is_active", true)
     .maybeSingle();
 
-  if (adminError || !platformAdmin) return json({ error: "Platform administrator access is required." }, 403);
+  if (adminError || !platformAdmin) return respond({ error: "Platform administrator access is required." }, 403);
 
   const body = await req.json();
   const restaurantId = String(body.restaurantId || "").trim();
@@ -59,10 +60,10 @@ Deno.serve(async (req) => {
   const billingCycle = String(body.billingCycle || "monthly").trim().toLowerCase();
 
   if (!restaurantId || !["starter","basic","pro","business","enterprise"].includes(planCode)) {
-    return json({ error: "Restaurant and a valid plan are required." }, 400);
+    return respond({ error: "Restaurant and a valid plan are required." }, 400);
   }
   if (!["monthly","yearly"].includes(billingCycle)) {
-    return json({ error: "Invalid billing cycle." }, 400);
+    return respond({ error: "Invalid billing cycle." }, 400);
   }
 
   const { data: plan, error: planError } = await adminClient
@@ -72,7 +73,7 @@ Deno.serve(async (req) => {
     .eq("is_active", true)
     .single();
 
-  if (planError || !plan) return json({ error: "Selected plan is not available." }, 400);
+  if (planError || !plan) return respond({ error: "Selected plan is not available." }, 400);
 
   const { data: restaurant, error: restaurantError } = await adminClient
     .from("restaurants")
@@ -80,7 +81,7 @@ Deno.serve(async (req) => {
     .eq("id", restaurantId)
     .single();
 
-  if (restaurantError || !restaurant) return json({ error: "Restaurant not found." }, 404);
+  if (restaurantError || !restaurant) return respond({ error: "Restaurant not found." }, 404);
 
   const now = new Date().toISOString();
 
@@ -91,7 +92,7 @@ Deno.serve(async (req) => {
     .in("status", ["trialing","active","past_due","paused"])
     .maybeSingle();
 
-  if (currentError) return json({ error: currentError.message }, 400);
+  if (currentError) return respond({ error: currentError.message }, 400);
 
   if (current) {
     await adminClient.from("subscriptions").update({
@@ -114,7 +115,7 @@ Deno.serve(async (req) => {
     .select("id,restaurant_id,plan_id,status,billing_cycle,start_date,end_date,plans(code,name,price_monthly,price_yearly,currency)")
     .single();
 
-  if (subscriptionError) return json({ error: subscriptionError.message }, 400);
+  if (subscriptionError) return respond({ error: subscriptionError.message }, 400);
 
   await adminClient.from("subscription_history").insert({
     restaurant_id: restaurantId,
@@ -130,5 +131,5 @@ Deno.serve(async (req) => {
     plan: planCode,
   }).eq("id", restaurantId);
 
-  return json({ success: true, subscription });
+  return respond({ success: true, subscription });
 });
