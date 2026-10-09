@@ -9,17 +9,17 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="login-page">
-  <main class="login-container">
+  <main class="login-shell">
     <section class="login-card" aria-labelledby="loginTitle">
-      <div class="login-brand"><span aria-hidden="true">🍽️</span><strong>PayBeforeBite</strong></div>
+      <div class="login-brand"><span class="login-logo" aria-hidden="true">🍽️</span><strong>PayBeforeBite</strong></div>
       <p class="eyebrow">RESTRICTED ACCESS</p>
       <h1 id="loginTitle">Platform administrator sign in</h1>
-      <p>Sign in with an authorized platform administrator account.</p>
-      <form id="adminLoginForm">
+      <p class="login-subtitle">Sign in with an authorized platform administrator account.</p>
+      <form id="adminLoginForm" class="login-form">
         <label for="adminEmail">Email address</label>
-        <input id="adminEmail" name="email" type="email" autocomplete="username" required>
+        <input id="adminEmail" name="email" type="email" class="text-input" autocomplete="username" required>
         <label for="adminPassword">Password</label>
-        <input id="adminPassword" name="password" type="password" autocomplete="current-password" required>
+        <input id="adminPassword" name="password" type="password" class="text-input" autocomplete="current-password" required>
         <button id="adminLoginButton" class="primary-btn" type="submit">Sign in</button>
       </form>
       <p id="adminLoginMessage" class="login-message" role="status" aria-live="polite"></p>
