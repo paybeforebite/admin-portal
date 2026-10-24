@@ -1,19 +1,31 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+const ALLOWED_ORIGINS = new Set([
+  "https://admin.paybeforebite.com",
+  "http://localhost:5500",
+  "http://127.0.0.1:5500",
+]);
+
+const corsHeadersFor = (req: Request) => {
+  const origin = req.headers.get("Origin") || "";
+  return {
+    ...(ALLOWED_ORIGINS.has(origin) ? { "Access-Control-Allow-Origin": origin, "Vary": "Origin" } : {}),
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
 };
 
-const json = (body: unknown, status = 200) =>
+const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...headers, "Content-Type": "application/json" },
   });
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+  const respond = (payload: unknown, status = 200) => json(payload, status, corsHeaders);
+  if (req.method !== "POST") return respond({ error: "Method not allowed" }, 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const publishableKeysRaw = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS");
@@ -22,12 +34,12 @@ Deno.serve(async (req) => {
   const secretKey = secretKeysRaw ? JSON.parse(secretKeysRaw).default : Deno.env.get("SUPABASE_SECRET_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!supabaseUrl || !publishableKey || !secretKey) {
-    return json({ error: "Supabase function secrets are not configured." }, 500);
+    return respond({ error: "Supabase function secrets are not configured." }, 500);
   }
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
-    return json({ error: "Authentication required." }, 401);
+    return respond({ error: "Authentication required." }, 401);
   }
 
   const accessToken = authHeader.replace("Bearer ", "");
@@ -40,7 +52,7 @@ Deno.serve(async (req) => {
 
   const { data: userData, error: userError } = await userClient.auth.getUser(accessToken);
   if (userError || !userData.user) {
-    return json({ error: "Invalid authentication session." }, 401);
+    return respond({ error: "Invalid authentication session." }, 401);
   }
 
   const { data: platformAdmin, error: adminCheckError } = await adminClient
@@ -51,7 +63,7 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (adminCheckError || !platformAdmin) {
-    return json({ error: "Platform administrator access is required." }, 403);
+    return respond({ error: "Platform administrator access is required." }, 403);
   }
 
   const body = await req.json();
@@ -62,15 +74,15 @@ Deno.serve(async (req) => {
   const plan = String(body.plan || "basic").trim().toLowerCase();
 
   if (!name || !ownerName || !ownerEmail) {
-    return json({ error: "Restaurant name, owner name and owner email are required." }, 400);
+    return respond({ error: "Restaurant name, owner name and owner email are required." }, 400);
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail)) {
-    return json({ error: "Enter a valid owner email address." }, 400);
+    return respond({ error: "Enter a valid owner email address." }, 400);
   }
 
   if (!["starter", "basic", "pro", "business", "enterprise"].includes(plan)) {
-    return json({ error: "Invalid plan." }, 400);
+    return respond({ error: "Invalid plan." }, 400);
   }
 
   const slugBase = name
@@ -95,10 +107,10 @@ Deno.serve(async (req) => {
     .single();
 
   if (restaurantError) {
-    return json({ error: restaurantError.message }, 400);
+    return respond({ error: restaurantError.message }, 400);
   }
 
-  const siteUrl = "https://paybeforebite.github.io/restaurant-pos";
+  const siteUrl = "https://app.paybeforebite.com";
   const redirectTo = new URL("update-password.html", siteUrl.endsWith("/") ? siteUrl : siteUrl + "/").href;
 
   const { data: invited, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(ownerEmail, {
@@ -113,7 +125,7 @@ Deno.serve(async (req) => {
 
   if (inviteError || !invited.user) {
     await adminClient.from("restaurants").delete().eq("id", restaurant.id);
-    return json({ error: inviteError?.message || "Unable to send invitation." }, 400);
+    return respond({ error: inviteError?.message || "Unable to send invitation." }, 400);
   }
 
   const { error: memberError } = await adminClient
@@ -130,7 +142,7 @@ Deno.serve(async (req) => {
   if (memberError) {
     await adminClient.auth.admin.deleteUser(invited.user.id);
     await adminClient.from("restaurants").delete().eq("id", restaurant.id);
-    return json({ error: memberError.message }, 400);
+    return respond({ error: memberError.message }, 400);
   }
 
   const { data: selectedPlan, error: planError } = await adminClient
@@ -143,7 +155,7 @@ Deno.serve(async (req) => {
   if (planError || !selectedPlan) {
     await adminClient.auth.admin.deleteUser(invited.user.id);
     await adminClient.from("restaurants").delete().eq("id", restaurant.id);
-    return json({ error: "The selected subscription plan is not available." }, 400);
+    return respond({ error: "The selected subscription plan is not available." }, 400);
   }
 
   const { error: subscriptionError } = await adminClient
@@ -159,10 +171,10 @@ Deno.serve(async (req) => {
   if (subscriptionError) {
     await adminClient.auth.admin.deleteUser(invited.user.id);
     await adminClient.from("restaurants").delete().eq("id", restaurant.id);
-    return json({ error: subscriptionError.message }, 400);
+    return respond({ error: subscriptionError.message }, 400);
   }
 
-  return json({
+  return respond({
     success: true,
     restaurant,
     owner: {

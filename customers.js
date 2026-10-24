@@ -61,7 +61,7 @@ function escapeHtml(value) {
 async function loadCustomers() {
   message.textContent = "Loading customers...";
   try {
-    const session = await window.restaurantAuthReady;
+    const session = await window.adminAuthReady;
     if (!session || !window.SUPABASE_CLIENT) return;
 
     const { data, error } = await window.SUPABASE_CLIENT.functions.invoke("list-customers");
@@ -95,7 +95,7 @@ form.addEventListener("submit", async (event) => {
   button.textContent = "Creating...";
 
   try {
-    const session = await window.restaurantAuthReady;
+    const session = await window.adminAuthReady;
     if (!session || !window.SUPABASE_CLIENT) throw new Error("Your session has expired.");
 
     const { data, error } = await window.SUPABASE_CLIENT.functions.invoke("create-restaurant-owner", {

@@ -70,7 +70,7 @@ function renderSubscriptions() {
 async function loadSubscriptions() {
   message.textContent = "Loading subscriptions...";
   try {
-    const session = await window.restaurantAuthReady;
+    const session = await window.adminAuthReady;
     if (!session || !window.SUPABASE_CLIENT) return;
     const { data, error } = await window.SUPABASE_CLIENT.functions.invoke("list-subscriptions");
     if (error) throw error;
@@ -106,7 +106,7 @@ form.addEventListener("submit", async (event) => {
   button.textContent = "Saving...";
   formMessage.textContent = "";
   try {
-    const session = await window.restaurantAuthReady;
+    const session = await window.adminAuthReady;
     if (!session || !window.SUPABASE_CLIENT) throw new Error("Your session has expired.");
     const { data, error } = await window.SUPABASE_CLIENT.functions.invoke("manage-subscription", {
       body: {
